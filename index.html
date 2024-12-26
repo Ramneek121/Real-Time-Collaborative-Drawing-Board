@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+      
+    <head>
+
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <link rel="stylesheet" href="/style.css">
+
+      <script>window.addEventListener('load', () => {
+            const banner = document.querySelector('#welcomeBanner');
+            if (banner) {
+              console.log('Found banner, removing it...');
+              banner.remove();
+            }
+          });</script>
+
+          <meta charset=""UTF-8" />
+            <title>Real-Time Collaborative Drawing Board</title><title>  <style>
+                   @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600&display=swap');
+                    body {
+                              margin: 0; padding: 0;
+                                    background: #f0f0f0;
+                                          font-family: sans-serif;
+                                                text-align: center;
+                    }
+                        #toolbar {
+                                  background: #fff;
+                                        padding: 10px;
+                                              border-bottom: 1px solid #ccc;
+                                                    margin-bottom: 10px;
+                        }
+                            button {
+                                      margin: 0 5px;
+                                            padding: 8px 15px;
+                                                  border: none;
+                                                        cursor: pointer;
+                                                              color: #fff;
+                                                                    background-color: #333;
+                                                                          font-size: 14px;
+                                                                                border-radius: 3px;
+                            }
+                                button:hover {
+                                          background-color: #555;
+                                }
+                                    #canvasContainer {
+                                              display: inline-block;
+                                                    position: relative;
+                                    }
+                                        #whiteboard {
+                                                  background: #fff;
+                                                        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+                                                              cursor: crosshair;
+                                                                    border: 1px solid #ccc;
+                                                                          touch-action: none; /* Prevent scrolling on touch devices */
+                                        }
+                                            .color-button {
+                                                      display: inline-block;
+                                                            width: 25px;
+                                                                  height: 25px;
+                                                                        border: 2px;
+                                                                              cursor: pointer;
+                                                                                    margin: 0 5px;
+                                                                                          border-radius: 3px;
+                                            }
+                                              </style>
+                                              </title><head><body>
+
+                                                <style>  /*
+
+                                                
+                                                      ================================
+                                                      2) Global Resets & Animated Body Background
+                                                      ================================
+                                                    */
+
+                                    
+
+
+                                                    * {
+                                                      margin: 0;
+                                                      padding: 0;
+                                                      box-sizing: border-box;
+                                                    }
+                                                
+                                                    /* 
+                                                      Animated gradient background using keyframes.
+                                                      The background will slowly shift left-to-right and back.
+                                                    */
+                                                    @keyframes gradientShift {
+                                                      0%   { background-position: 0% 50%; }
+                                                      50%  { background-position: 100% 50%; }
+                                                      100% { background-position: 0% 50%; }
+                                                    }
+                                                
+                                                    body {
+                                                      font-family: 'Urbanist', sans-serif;
+                                                      
+                                                      /* Animated pastel gradient.
+                                                         "background-size: 200% 200%" allows the gradient to shift. */
+                                                      background: linear-gradient(
+                                                        -45deg,
+                                                        #fcb69f,
+                                                        #ffecd2,
+                                                        #fcb69f,
+                                                        #ffecd2
+                                                      );
+                                                      background-size: 200% 200%;
+                                                      
+                                                      animation: gradientShift 20s ease infinite;
+                                                      
+                                                      min-height: 100vh;
+                                                      display: flex;
+                                                      flex-direction: column;
+                                                      align-items: center;
+                                                      
+                                                      /* A bit of top padding so the toolbar doesn't get crammed */
+                                                      padding-top: 30px;
+                                                    }
+                                                
+                                                    /*
+                                                      ================================
+                                                      3) Toolbar (Glassmorphism)
+                                                      ================================
+                                                    */
+                                                    #toolbar {
+                                                      /* Glass effect: partially transparent white with backdrop blur */
+                                                      background: rgba(255, 255, 255, 0.2);
+                                                      backdrop-filter: blur(10px) saturate(180%);
+                                                      -webkit-backdrop-filter: blur(10px) saturate(180%);
+                                                      
+                                                      border: 1px solid rgba(255, 255, 255, 0.3);
+                                                      border-radius: 12px;
+                                                      padding: 12px 24px;
+                                                      margin-bottom: 24px;
+                                                      
+                                                      /* Slight shadow for depth */
+                                                      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+                                                      
+                                                      /* Constrain max width so it doesn't stretch too far */
+                                                      max-width: 1000px;
+                                                      width: 90%;
+                                                      
+                                                      /* Center the contents in a row */
+                                                      display: flex;
+                                                      flex-wrap: wrap;
+                                                      align-items: center;
+                                                      justify-content: center;
+                                                      gap: 12px;
+                                                    }
+                                                
+                                                    /*
+                                                      ================================
+                                                      4) Buttons (e.g. "Clear Canvas")
+                                                      ================================
+                                                    */
+                                                    button {
+                                                      background: linear-gradient(135deg, #f36d93, #f58ea1);
+                                                      color: #fff;
+                                                      border: none;
+                                                      border-radius: 8px;
+                                                      cursor: pointer;
+                                                      
+                                                      padding: 10px 16px;
+                                                      margin: 5px;
+                                                      font-size: 14px;
+                                                      font-weight: 600;
+                                                      letter-spacing: 0.5px;
+                                                
+                                                      /* Smooth hover transition */
+                                                      transition: transform 0.2s, background 0.3s;
+                                                    }
+                                                
+                                                    /* A subtle hover lift and color shift */
+                                                    button:hover {
+                                                      transform: translateY(-2px);
+                                                      background: linear-gradient(135deg, #fa5b88, #f692a7);
+                                                    }
+                                                
+                                                    /*
+                                                      ================================
+                                                      5) Color Swatches
+                                                      ================================
+                                                    */
+                                                    .color-button {
+                                                      width: 36px;
+                                                      height: 36px;
+                                                      margin: 5px;
+                                                      
+                                                      /* Circle shape for a modern vibe */
+                                                      border-radius: 50%;
+                                                      border: 2px solid #fff;
+                                                      
+                                                      /* Subtle drop shadow */
+                                                      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                                                      
+                                                      cursor: pointer;
+                                                      
+                                                      /* Transition to scale up slightly on hover */
+                                                      transition: transform 0.2s, box-shadow 0.2s;
+                                                    }
+                                                
+                                                    .color-button:hover {
+                                                      transform: scale(1.15);
+                                                      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                                                    }
+                                                
+                                                    /*
+                                                      ================================
+                                                      6) Canvas Container
+                                                      ================================
+                                                    */
+                                                    #canvasContainer {
+                                                      position: relative;
+                                                      display: inline-block;
+                                                      margin-bottom: 40px;
+                                                      
+                                                      /* 
+                                                        Subtle rounding + shadow so it doesn't look flat.
+                                                        "overflow: hidden;" can create a neat clipped edge effect 
+                                                        if you want the canvas corners to be rounded. 
+                                                      */
+                                                      border-radius: 16px;
+                                                      overflow: hidden;
+                                                      
+                                                      box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+                                                    }
+                                                
+                                                    /*
+                                                      ================================
+                                                      7) The Canvas
+                                                      ================================
+                                                    */
+                                                    #whiteboard {
+                                                      background: #fff;
+                                                      border-radius: 16px;
+                                                      
+                                                      /* 
+                                                         "cursor: crosshair" helps emphasize drawing
+                                                         "touch-action: none" prevents page scrolling on mobile devices 
+                                                      */
+                                                      cursor: crosshair;
+                                                      touch-action: none;
+                                                      
+                                                      /* If you want a border line, uncomment:
+                                                         border: 2px solid #ddd;
+                                                      */
+                                                    }</style>
+                                                  <div id=""toolbar">
+                                                    <button id="clearBtn">Clear Canvas</button><button>    <div class="color-button" data-color="#000" style="background: #000;"></div><div>    <div class="color-button" data-color="#f00" style="background: #f00;"></div><div>    <div class="color-button" data-color="#0a0" style="background: #0a0;"></div><div>    <div class="color-button" data-color="#00f" style="background: #00f;"></div><div>    <div class="color-button" data-color="#ff0" style="background: #ff0;"></div><div>  </div><div>
+                                                          <div id=""canvasContainer">
+                                                            <canvas id="whiteboard" width="800" height="600"></canvas><canvas>  </canvas><div>
+                                                                  <!-- Include Socket.io client from a CDN -->
+                                                                  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+                                                                  <script>
+                                                                        /************************************************************
+                                                                         *      * Real-Time Collaborative Drawing Board (Client Side)
+                                                                         *      ************************************************************/
+                                                                             // Connect to our Socket.io server
+                                                                                 const socket = io();
+
+                                                                                     // Grab the canvas and context
+                                                                                         const canvas = document.getElementById('whiteboard');
+                                                                                             const ctx = canvas.getContext('2d');
+
+                                                                                                 // Tool references
+                                                                                                     const clearBtn = document.getElementById('clearBtn');
+                                                                                                         const colorButtons = document.querySelectorAll('.color-button');
+
+                                                                                                             // Some drawing state
+                                                                                                                 let drawing = false;
+                                                                                                                     let currentX = 0;
+                                                                                                                         let currentY = 0;
+                                                                                                                             let color = '#000';
+                                                                                                                                 let lineWidth = 3; // Can make adjustable if you want.
+
+                                                                                                                                     // ============= Socket.io Listeners =============
+
+                                                                                                                                         // 1. When we first connect, the server sends us all existing lines
+                                                                                                                                             socket.on('init', (savedLines) => {
+                                                                                                                                                      savedLines.forEach((line) => {
+                                                                                                                                                                drawLineOnCanvas(line);
+                                                                                                                                                      });
+                                                                                                                                                    });
+
+                                                                                                                                                        // 2. When someone else draws a line, we get that data
+                                                                                                                                                            socket.on('drawLine', (data) => {
+                                                                                                                                                                      drawLineOnCanvas(data);
+                                                                                                                                                            });
+
+                                                                                                                                                                // 3. When someone clears the canvas, we hear about it
+                                                                                                                                                                    socket.on('clearCanvas', () => {
+                                                                                                                                                                              ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                                                                                                                                                    });
+
+                                                                                                                                                                        // ============= Drawing Functions =============
+
+                                                                                                                                                                            function drawLineOnCanvas(data) {
+                                                                                                                                                                                      const { x0, y0, x1, y1, color, lineWidth } = data;
+                                                                                                                                                                                            ctx.strokeStyle = color;
+                                                                                                                                                                                                  ctx.lineWidth = lineWidth;
+                                                                                                                                                                                                        ctx.beginPath();
+                                                                                                                                                                                                              ctx.moveTo(x0, y0);
+                                                                                                                                                                                                                    ctx.lineTo(x1, y1);
+                                                                                                                                                                                                                          ctx.stroke();
+                                                                                                                                                                                                                                ctx.closePath();
+                                                                                                                                                                            }
+
+                                                                                                                                                                                function getMousePosition(evt) {
+                                                                                                                                                                                          const rect = canvas.getBoundingClientRect();
+                                                                                                                                                                                                return {
+                                                                                                                                                                                                            x: evt.clientX - rect.left,
+                                                                                                                                                                                                                    y: evt.clientY - rect.top      };
+                                                                                                                                                                                                }
+
+                                                                                                                                                                                                    // ============= Mouse Event Handlers =============
+                                                                                                                                                                                                        function onMouseDown(e) {
+                                                                                                                                                                                                                  drawing = true;
+                                                                                                                                                                                                                        const { x, y } = getMousePosition(e);
+                                                                                                                                                                                                                              currentX = x;
+                                                                                                                                                                                                                                    currentY = y;
+                                                                                                                                                                                                        }
+
+                                                                                                                                                                                                            function onMouseMove(e) {
+                                                                                                                                                                                                                      if (!drawing) return;
+                                                                                                                                                                                                                            const { x, y } = getMousePosition(e);
+
+                                                                                                                                                                                                                                  const data = {
+                                                                                                                                                                                                                                            x0: currentX,
+                                                                                                                                                                                                                                                    y0: currentY,
+                                                                                                                                                                                                                                                            x1: x,
+                                                                                                                                                                                                                                                                    y1: y,
+                                                                                                                                                                                                                                                                            color,
+                                                                                                                                                                                                                                                                                    lineWidth      };
+
+                                                                                                                                                                                                                                                                                          // Draw locally
+                                                                                                                                                                                                                                                                                                drawLineOnCanvas(data);
+                                                                                                                                                                                                                                                                                                      // Broadcast so others can see it
+                                                                                                                                                                                                                                                                                                            socket.emit('drawLine', data);
+
+                                                                                                                                                                                                                                                                                                                  currentX = x;
+                                                                                                                                                                                                                                                                                                                        currentY = y;
+                                                                                                                                                                                                                                  }
+
+                                                                                                                                                                                                                                      function onMouseUp() {
+                                                                                                                                                                                                                                              drawing = false;
+                                                                                                                                                                                                                                      }
+
+                                                                                                                                                                                                                                          // ============= Touch Event Handlers (Mobile) =============
+                                                                                                                                                                                                                                              function onTouchStart(e) {
+                                                                                                                                                                                                                                                      if (e.touches.length !== 1) return;
+                                                                                                                                                                                                                                                            e.preventDefault();
+                                                                                                                                                                                                                                                                  drawing = true;
+                                                                                                                                                                                                                                                                        const touch = e.touches[0];
+                                                                                                                                                                                                                                                                              const rect = canvas.getBoundingClientRect();
+                                                                                                                                                                                                                                                                                    currentX = touch.clientX - rect.left;
+                                                                                                                                                                                                                                                                                          currentY = touch.clientY - rect.top;
+                                                                                                                                                                                                                                              }
+
+                                                                                                                                                                                                                                                  function onTouchMove(e) {
+                                                                                                                                                                                                                                                          if (e.touches.length !== 1 || !drawing) return;
+                                                                                                                                                                                                                                                                e.preventDefault();
+                                                                                                                                                                                                                                                                      const touch = e.touches[0];
+                                                                                                                                                                                                                                                                            const rect = canvas.getBoundingClientRect();
+                                                                                                                                                                                                                                                                                  const x = touch.clientX - rect.left;
+                                                                                                                                                                                                                                                                                        const y = touch.clientY - rect.top;
+
+                                                                                                                                                                                                                                                                                              const data = {
+                                                                                                                                                                                                                                                                                                        x0: currentX,
+                                                                                                                                                                                                                                                                                                                y0: currentY,
+                                                                                                                                                                                                                                                                                                                        x1: x,
+                                                                                                                                                                                                                                                                                                                                y1: y,
+                                                                                                                                                                                                                                                                                                                                        color,
+                                                                                                                                                                                                                                                                                                                                                lineWidth      };
+
+                                                                                                                                                                                                                                                                                                                                                      drawLineOnCanvas(data);
+                                                                                                                                                                                                                                                                                                                                                            socket.emit('drawLine', data);
+
+                                                                                                                                                                                                                                                                                                                                                                  currentX = x;
+                                                                                                                                                                                                                                                                                                                                                                        currentY = y;
+                                                                                                                                                                                                                                                                                              }
+
+                                                                                                                                                                                                                                                                                                  function onTouchEnd(e) {
+                                                                                                                                                                                                                                                                                                          e.preventDefault();
+                                                                                                                                                                                                                                                                                                                drawing = false;
+                                                                                                                                                                                                                                                                                                  }
+
+                                                                                                                                                                                                                                                                                                      // ============= Attach Event Listeners =============
+                                                                                                                                                                                                                                                                                                          canvas.addEventListener('mousedown', onMouseDown, false);
+                                                                                                                                                                                                                                                                                                              canvas.addEventListener('mousemove', onMouseMove, false);
+                                                                                                                                                                                                                                                                                                                  canvas.addEventListener('mouseup', onMouseUp, false);
+                                                                                                                                                                                                                                                                                                                      canvas.addEventListener('mouseout', onMouseUp, false);
+
+                                                                                                                                                                                                                                                                                                                          canvas.addEventListener('touchstart', onTouchStart, false);
+                                                                                                                                                                                                                                                                                                                              canvas.addEventListener('touchmove', onTouchMove, false);
+                                                                                                                                                                                                                                                                                                                                  canvas.addEventListener('touchend', onTouchEnd, false);
+
+                                                                                                                                                                                                                                                                                                                                      // Clear button
+                                                                                                                                                                                                                                                                                                                                          clearBtn.addEventListener('click', () => {
+                                                                                                                                                                                                                                                                                                                                                  socket.emit('clearCanvas');
+                                                                                                                                                                                                                                                                                                                                          });
+
+                                                                                                                                                                                                                                                                                                                                              // Changing pen color
+                                                                                                                                                                                                                                                                                                                                                  colorButtons.forEach((btn) => {
+                                                                                                                                                                                                                                                                                                                                                          btn.addEventListener('click', () => {
+                                                                                                                                                                                                                                                                                                                                                                    color = btn.dataset.color;
+                                                                                                                                                                                                                                                                                                                                                          });
+                                                                                                                                                                                                                                                                                                                                                        });
+                                                                                                                                                                                                                                                                                                                                                          </script>
+
+</script>
+                                                                                                                                                                                                                                                                                                                                                          </div><body>
+                                                                                                                                                                                                                                                                                                                                                            </body><html>
